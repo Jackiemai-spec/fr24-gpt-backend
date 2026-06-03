@@ -1,0 +1,83 @@
+openapi: 3.1.0
+info:
+  title: FR24 Aircraft Report Backend
+  version: "1.0.0"
+  description: Generate downloadable Excel aircraft flight reports from FR24 data by MSN or registration.
+servers:
+  - url: https://your-backend-domain.example.com
+paths:
+  /reports:
+    post:
+      operationId: createFR24AircraftReport
+      summary: Create an FR24 aircraft Excel report
+      description: >
+        Generates a downloadable Excel report for an aircraft using either MSN or registration.
+        If MSN is supplied, the backend resolves it to registration using its aircraft mapping table.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                msn:
+                  type: string
+                  description: Manufacturer serial number, e.g. 39764.
+                registration:
+                  type: string
+                  description: Aircraft registration, e.g. EI-EIN.
+                from_date:
+                  type: string
+                  format: date
+                  description: Start date in yyyy-mm-dd format.
+                to_date:
+                  type: string
+                  format: date
+                  description: End date in yyyy-mm-dd format.
+                days:
+                  type: integer
+                  description: Lookback days if explicit dates are omitted. Default 20.
+                  default: 20
+              anyOf:
+                - required: [msn]
+                - required: [registration]
+      responses:
+        "200":
+          description: Report created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  report_id:
+                    type: string
+                  msn:
+                    type: string
+                  registrations:
+                    type: array
+                    items:
+                      type: string
+                  from_date:
+                    type: string
+                  to_date:
+                    type: string
+                  row_count:
+                    type: integer
+                  total_flight_hours:
+                    type: number
+                  download_url:
+                    type: string
+                  notes:
+                    type: array
+                    items:
+                      type: string
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
